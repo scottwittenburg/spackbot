@@ -1,10 +1,17 @@
-import aiohttp
+import json
+import pathlib
 import pytest
 from gidgethub import abc as gh_abc
 from gidgethub import sansio
 from gidgethub.abc import JSON_UTF_8_CHARSET
 
 from spackbot.routes import router
+
+
+def load_event_data(json_file):
+    data_path = pathlib.Path(__file__).parent / "data" / json_file
+    with data_path.open("rb") as fd:
+        return fd.read()
 
 class MockGitHubAPI(gh_abc.GitHubAPI):
     DEFAULT_HEADERS = {
@@ -24,6 +31,7 @@ class MockGitHubAPI(gh_abc.GitHubAPI):
         oauth_token=None,
         base_url=sansio.DOMAIN,
     ):
+        print("Constructing a MockGitHubAPI instance")
         self.response_code = status_code
         self.response_headers = headers
         self.response_body = body
@@ -50,15 +58,18 @@ class MockGitHubAPI(gh_abc.GitHubAPI):
         """Sleep for the specified number of seconds."""
         self.slept = seconds
 
-    async def post():
-        print("I got posted!")
-
 
 @pytest.mark.asyncio
 async def test_something():
     gh = MockGitHubAPI()
-    event = sansio.Event({}, event="pull_request", delivery_id="1234")
-    await router.dispatch(event, gh)
+    headers = {
+        "x-github-event": "check_run",
+        "content-type": "application/json; charset=utf-8",
+        "x-github-delivery": "meh",
+    }
+    event = sansio.Event.from_http(headers, load_event_data("check_run.json"))
+    # event = sansio.Event({}, event="pull_request", delivery_id="1234")
+    await router.dispatch(event, gh, session=None)
 
     print("I am here")
     assert False

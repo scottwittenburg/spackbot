@@ -26,8 +26,11 @@ async def style_comment(event, gh):
     # Find the pull request that is matched to the repository. It looks like
     # checks are shared across different repos (e.g., a fork and upstream)
     repository = event.data["repository"]["full_name"]  # "spack-test/spack"
+    print("pow")
     for pr in event.data["check_run"]["pull_requests"]:  # []
+        print("  boing")
         if repository in pr["url"]:
+            print("    zap")
             number = pr["url"].split("/")[-1]
             comments_url = (
                 f"https://api.github.com/repos/{repository}/issues/{number}/comments"

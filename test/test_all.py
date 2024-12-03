@@ -31,7 +31,6 @@ class MockGitHubAPI(gh_abc.GitHubAPI):
         oauth_token=None,
         base_url=sansio.DOMAIN,
     ):
-        print("Constructing a MockGitHubAPI instance")
         self.response_code = status_code
         self.response_headers = headers
         self.response_body = body
@@ -60,16 +59,16 @@ class MockGitHubAPI(gh_abc.GitHubAPI):
 
 
 @pytest.mark.asyncio
-async def test_something():
+async def test_route_style_check():
     gh = MockGitHubAPI()
     headers = {
         "x-github-event": "check_run",
-        "content-type": "application/json; charset=utf-8",
+        "content-type": JSON_UTF_8_CHARSET,
         "x-github-delivery": "meh",
     }
     event = sansio.Event.from_http(headers, load_event_data("check_run.json"))
-    # event = sansio.Event({}, event="pull_request", delivery_id="1234")
     await router.dispatch(event, gh, session=None)
 
-    print("I am here")
-    assert False
+    assert gh.method == "POST"
+    assert gh.url == "https://api.github.com/repos/spack-test/spack/issues/43/comments"
+    assert "It looks like you had an issue with style checks!" in gh.body.decode("utf-8")

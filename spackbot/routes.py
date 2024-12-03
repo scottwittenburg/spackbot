@@ -50,18 +50,15 @@ async def add_style_comments(event, gh, *args, session, **kwargs):
     """
     Respond to all check runs (e.g., for style or GitHub Actions)
     """
-    print("burp")
     # Nothing to do with success
     if event.data["check_run"]["conclusion"] == "success":
         return
 
-    print("gah")
     check_name = event.data["check_run"]["name"]
     logger.info(f"check run {check_name} unsuccesful")
 
     # If it's not a style check, we don't care
-    if check_name == "style":
-        print("boo")
+    if check_name == "prechecks / style":
         await handlers.style_comment(event, gh)
 
 
